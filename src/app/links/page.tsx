@@ -3,25 +3,93 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { FiPlus, FiExternalLink, FiTrash2, FiEdit2 } from 'react-icons/fi';
+import { DEFAULT_LINKS } from '@/constants/links';
 import AddLinkModal from './components/AddLinkModal';
 
-// Function to generate a consistent, vibrant color from a string
-const getCategoryColor = (str: string, opacity: number = 0.2): string => {
-  if (!str) return 'rgba(243, 244, 246, 0.2)';
-  
-  // Simple hash function
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+// Unique icons for each card
+const CARD_ICONS = [
+  '⚡', '🎯', '🌱', '🌅', '👑', '🐠', '🧿', '✨',
+  '🚀', '💡', '🔧', '📊', '📚', '🎨', '🔍', '📱',
+  '💻', '🎮', '📈', '🔒', '🎯', '🎲', '🎨', '📝',
+  '🔑', '💎', '📌', '🔔', '🎁', '🏆', '💫', '🌐'
+];
+
+// Color themes
+const CARD_COLORS = [
+  { 
+    bg: 'bg-[#3B82F6]', // Electric Blue
+    lightBg: 'bg-blue-500/20',
+    border: 'border-blue-400',
+    hoverBg: 'hover:bg-[#3B82F6] hover:text-white'
+  },
+  { 
+    bg: 'bg-[#EC4899]', // Neon Pink
+    lightBg: 'bg-pink-500/20',
+    border: 'border-pink-400',
+    hoverBg: 'hover:bg-[#EC4899] hover:text-white'
+  },
+  { 
+    bg: 'bg-[#10B981]', // Vivid Green
+    lightBg: 'bg-green-500/20',
+    border: 'border-green-400',
+    hoverBg: 'hover:bg-[#10B981] hover:text-white'
+  },
+  { 
+    bg: 'bg-[#F97316]', // Sunset Orange
+    lightBg: 'bg-orange-500/20',
+    border: 'border-orange-400',
+    hoverBg: 'hover:bg-[#F97316] hover:text-white'
+  },
+  { 
+    bg: 'bg-[#8B5CF6]', // Royal Purple
+    lightBg: 'bg-purple-500/20',
+    border: 'border-purple-400',
+    hoverBg: 'hover:bg-[#8B5CF6] hover:text-white'
+  },
+  { 
+    bg: 'bg-[#F43F5E]', // Coral
+    lightBg: 'bg-rose-500/20',
+    border: 'border-rose-400',
+    hoverBg: 'hover:bg-[#F43F5E] hover:text-white'
+  },
+  { 
+    bg: 'bg-[#14B8A6]', // Teal
+    lightBg: 'bg-teal-500/20',
+    border: 'border-teal-400',
+    hoverBg: 'hover:bg-[#14B8A6] hover:text-white'
+  },
+  { 
+    bg: 'bg-[#F59E0B]', // Amber
+    lightBg: 'bg-amber-500/20',
+    border: 'border-amber-400',
+    hoverBg: 'hover:bg-[#F59E0B] hover:text-white'
   }
+];
+
+// Function to get consistent colors and unique icons for each card
+const getCardProps = (title: string, category?: string) => {
+  // Simple hash function to get consistent values
+  const hash = (str: string) => {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = str.charCodeAt(i) + ((h << 5) - h);
+    }
+    return Math.abs(h);
+  };
+
+  // Get color based on category or title
+  const colorIndex = category 
+    ? hash(category) % CARD_COLORS.length 
+    : hash(title) % CARD_COLORS.length;
+    
+  // Get unique icon based on title
+  const iconIndex = hash(title) % CARD_ICONS.length;
   
-  // Generate vibrant colors with good contrast
-  const hue = Math.abs(hash) % 360;
-  const saturation = 70 + (Math.abs(hash) % 26);  // 70-95%
-  const lightness = 50 + (Math.abs(hash) % 16);   // 50-65%
-  
-  // More vibrant colors with better contrast
-  return `hsla(${hue}, ${saturation}%, ${lightness}%, ${opacity * 1.5})`;
+  return {
+    ...CARD_COLORS[colorIndex],
+    text: 'text-white',
+    icon: CARD_ICONS[iconIndex]
+  };
 };
 
 interface LinkItem {
@@ -39,135 +107,7 @@ const LinksPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
-  // Default links to show when no links exist
-  const defaultLinks: LinkItem[] = [
-    {
-      id: '1',
-      title: 'Chrome Extensions',
-      url: 'chrome://extensions/',
-      category: 'Productivity',
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7
-    },
-    {
-      id: '2',
-      title: 'Notion Workspace',
-      url: 'https://www.notion.so/258a0fbd0e048046819ac807d970937b',
-      category: 'Productivity',
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 * 6
-    },
-    {
-      id: '3',
-      title: 'DevSNC Code',
-      url: 'https://code.devsnc.com/',
-      category: 'Development',
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 * 5
-    },
-    {
-      id: '4',
-      title: 'Thomas Frank Brain',
-      url: 'https://thomasjfrank.com/brain/',
-      category: 'Productivity',
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 * 4
-    },
-    {
-      id: '5',
-      title: 'ChatGPT',
-      url: 'https://chatgpt.com/',
-      category: 'AI',
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 * 3
-    },
-    {
-      id: '6',
-      title: 'Codeforces',
-      url: 'https://codeforces.com/',
-      category: 'Coding',
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 * 2
-    },
-    {
-      id: '7',
-      title: 'Discord Channel',
-      url: 'https://discord.com/channels/1346677905970692146/1347243291862892544',
-      category: 'Communication',
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 * 1
-    },
-    {
-      id: '8',
-      title: 'Notion Formula Reference',
-      url: 'https://thomasjfrank.com/formulas/notion-formula-reference/',
-      category: 'Productivity',
-      createdAt: Date.now()
-    },
-    {
-      id: '9',
-      title: 'Thomas Frank YouTube',
-      url: 'https://www.youtube.com/@ThomasFrankExplains',
-      category: 'Productivity',
-      createdAt: Date.now()
-    },
-    {
-      id: '10',
-      title: 'Chrome Web Store',
-      url: 'https://chromewebstore.google.com/',
-      category: 'Productivity',
-      createdAt: Date.now()
-    },
-    {
-      id: '11',
-      title: 'Power of Aura',
-      url: 'http://thepowerofaura.com/',
-      category: 'Personal',
-      createdAt: Date.now()
-    },
-    {
-      id: '12',
-      title: 'YouTube Video',
-      url: 'https://www.youtube.com/watch?v=g1maiGeki6I',
-      category: 'Productivity',
-      createdAt: Date.now()
-    },
-    {
-      id: '13',
-      title: 'Emojipedia',
-      url: 'https://emojipedia.org/link',
-      category: 'Reference',
-      createdAt: Date.now()
-    },
-    {
-      id: '14',
-      title: 'Asset Yogi Playlists',
-      url: 'https://www.youtube.com/@AssetYogi/playlists',
-      category: 'Education',
-      createdAt: Date.now()
-    },
-    {
-      id: '15',
-      title: 'Aadi AURA Notion',
-      url: 'https://www.notion.so/Aadi-AURA-1f5a0fbd0e0480f0b9a7f3bd28670004',
-      category: 'Productivity',
-      createdAt: Date.now()
-    },
-    {
-      id: '16',
-      title: 'Timeline Brain Dump',
-      url: 'https://www.notion.so/native/Timeline-Brain-dump-27ba0fbd0e048069a578cb7eda7d138a',
-      category: 'Productivity',
-      createdAt: Date.now()
-    },
-    {
-      id: '17',
-      title: 'Outlook Inbox',
-      url: 'https://outlook.office.com/mail/inbox/id/AAQkADhjZjVjMTdjLWUyZWItNGQ3NC05ZWEyLTdiYWIxOTE5ODZkZgAQAM94M1iuoXxKu4vh8e9jsnk%3D',
-      category: 'Email',
-      createdAt: Date.now()
-    },
-    {
-      id: '18',
-      title: 'Agentic AI Course',
-      url: 'https://servicenow.udemy.com/course/the-complete-agentic-ai-engineering-course/learn/lecture/49739779#overview',
-      category: 'Education',
-      createdAt: Date.now()
-    }
-  ];
+  // Use default links from constants
 
   // Load links from localStorage on component mount
   useEffect(() => {
@@ -183,11 +123,11 @@ const LinksPage = () => {
       } catch (error) {
         console.error('Error parsing saved links:', error);
         console.log('Falling back to default links');
-        setLinks(defaultLinks);
+        setLinks([...DEFAULT_LINKS]);
       }
     } else {
       console.log('No saved links found, using default links');
-      setLinks(defaultLinks);
+      setLinks([...DEFAULT_LINKS]);
     }
   }, []);
 
@@ -199,12 +139,12 @@ const LinksPage = () => {
   }, [links]);
 
   const addLink = (newLink: Omit<LinkItem, 'id' | 'createdAt'>) => {
-    const linkWithId = {
+    const linkWithId: LinkItem = {
       ...newLink,
       id: Date.now().toString(),
       createdAt: Date.now(),
     };
-    setLinks([...links, linkWithId]);
+    setLinks(prevLinks => [...prevLinks, linkWithId]);
   };
 
   const updateLink = (updatedLink: Omit<LinkItem, 'id' | 'createdAt'> & { id?: string }) => {
@@ -318,110 +258,82 @@ const LinksPage = () => {
         existingCategories={categories.filter(cat => cat !== 'All')}
       />
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
-          <h1 className="text-xl font-bold text-gray-900">Links</h1>
-          <div className="w-full sm:w-auto flex gap-2">
-            <div className="relative flex-1 sm:w-48">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  activeCategory === category
+                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-100'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+          
+          <div className="relative w-full sm:w-auto">
+            <div className="relative">
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search links..."
-                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-transparent h-8"
+                placeholder="Search..."
+                className="w-full sm:w-48 pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
-                onBlur={(e) => {
-                  // Re-focus if blur was not caused by clicking on the modal
-                  if (!isModalOpen) {
-                    e.target.focus();
-                  }
-                }}
               />
-              <svg
-                className="absolute right-2 top-1.5 h-3.5 w-3.5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
-            <button
-              onClick={() => {
-                setEditingLink(null);
-                setIsModalOpen(true);
-              }}
-              className="flex items-center px-2.5 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md h-8 whitespace-nowrap"
-            >
-              <FiPlus className="mr-1 h-3 w-3" />
-              Add Link
-            </button>
           </div>
         </div>
 
-        {/* Category filter pills */}
-        {categories.length > 1 && (
-          <div className="mb-3 overflow-x-auto pb-1">
-            <div className="flex space-x-1.5">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setActiveCategory(category)}
-                  className={`px-2.5 py-0.5 rounded-full text-xs whitespace-nowrap ${
-                    activeCategory === category
-                      ? 'bg-blue-100 text-blue-700 font-medium'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {groupedLinks.length > 0 ? (
-          <div className="space-y-4">
-            {groupedLinks.map(({ category, items }) => (
-              <div key={category} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-                {items.map((link) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+            {groupedLinks.flatMap(({ items }) => 
+              items.map((link) => (
               <a
                 key={link.id}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block p-3 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-150 relative overflow-hidden"
+                className="group block transition-all duration-200 relative overflow-hidden hover:shadow-lg hover:-translate-y-0.5 rounded-full mx-1 my-1"
                 onContextMenu={(e) => {
                   e.preventDefault();
                   handleEdit(link);
                 }}
-                style={{
-                  backgroundColor: link.category ? getCategoryColor(link.category, 0.3) : '#f9fafb',
-                  borderLeft: link.category ? `4px solid ${getCategoryColor(link.category, 0.8)}` : '1px solid #e5e7eb',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                }}
               >
-                <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-all duration-200 pointer-events-none"
-                  style={{
-                    background: link.category 
-                      ? `linear-gradient(135deg, ${getCategoryColor(link.category, 0.8)} 0%, ${getCategoryColor(link.category, 0.4)} 100%)` 
-                      : '#e5e7eb',
-                  }}
-                />
-                <div className="font-medium text-sm text-gray-900 truncate group-hover:text-gray-800">
-                  {link.title}
-                </div>
-                  </a>
-                ))}
-              </div>
-            ))}
+                {(() => {
+                  const { text, icon, lightBg, hoverBg, border } = getCardProps(link.title, link.category);
+                  return (
+                    <div className={`flex items-center px-5 py-3 rounded-full ${lightBg} ${hoverBg} transition-all duration-300 border ${border} hover:shadow-lg`}>
+                      <span className="text-2xl mr-3">{icon}</span>
+                      <div className="text-sm font-semibold tracking-wide truncate">
+                        {link.title}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </a>
+              ))
+            )}
           </div>
         ) : (
           <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
