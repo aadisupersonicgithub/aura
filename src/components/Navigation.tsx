@@ -10,6 +10,7 @@ export default function Navigation() {
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
     { name: 'Ecosystem', href: '/ecosystem' },
+    { name: 'Links', href: '/links' },
     { name: 'Mindset Hub', href: '/mindset' },
     { name: 'Reels', href: '/reels' },
     { name: 'Shop', href: '/shop' },
