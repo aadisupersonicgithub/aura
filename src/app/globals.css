@@ -1,1 +1,179 @@
 @import "tailwindcss";
+
+/* Modern Privacy Mode Styles */
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.02); }
+}
+
+@keyframes borderGlow {
+  0% { border-color: rgba(99, 102, 241, 0.8); }
+  33% { border-color: rgba(168, 85, 247, 0.8); }
+  66% { border-color: rgba(236, 72, 153, 0.8); }
+  100% { border-color: rgba(99, 102, 241, 0.8); }
+}
+
+.privacy-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(-45deg, #0a0a1a, #0c1120, #081528, #0a0a1a);
+  background-size: 400% 400%;
+  z-index: 9998;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: gradientBG 15s ease infinite;
+  backdrop-filter: blur(10px);
+}
+
+body.private-mode .privacy-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.privacy-content {
+  position: relative;
+  padding: 3rem 5rem;
+  border-radius: 20px;
+  background: rgba(26, 26, 46, 0.7);
+  backdrop-filter: blur(12px);
+  border: 2px solid transparent;
+  animation: borderGlow 8s linear infinite;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+.privacy-content::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #6366f1, #a855f7, #ec4899, #6366f1);
+  background-size: 400% 400%;
+  z-index: -1;
+  border-radius: 22px;
+  animation: gradientBG 8s ease infinite, borderGlow 8s linear infinite;
+  opacity: 0.8;
+}
+
+.privacy-content span {
+  display: inline-block;
+  font-size: 4.5rem;
+  font-weight: 800;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(90deg, #fff, #e0e0ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+  animation: float 4s ease-in-out infinite;
+}
+
+.privacy-content .fire-emoji {
+  animation: float 3s ease-in-out infinite, pulse 2s ease-in-out infinite;
+  display: inline-block;
+  transform-origin: center bottom;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1) rotate(-5deg); }
+  50% { transform: scale(1.2) rotate(5deg); }
+}
+
+/* Navigation styles in private mode */
+body.private-mode {
+  overflow: hidden;
+  height: 100vh;
+}
+
+body.private-mode > *:not(.privacy-overlay) {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+nav {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 10000;
+}
+
+/* Keep the navigation visible but styled for privacy mode */
+body.private-mode nav {
+  visibility: visible;
+  opacity: 0.7;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  filter: blur(4px);
+  transform: scale(0.98);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* Ensure the privacy toggle remains clickable */
+body.private-mode .privacy-toggle {
+  pointer-events: auto;
+}
+
+/* Toggle button styles */
+.privacy-toggle {
+  position: relative;
+  z-index: 10001;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.privacy-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+}
+
+.privacy-toggle:active {
+  transform: translateY(0);
+}
+
+body.private-mode .privacy-toggle {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e0e0ff;
+}
+
+/* Make sure the privacy toggle remains visible */
+body.private-mode button[title*="Privacy Mode"] {
+  background-color: #000 !important;
+  border: 1px solid #fff !important;
+  color: #fff !important;
+  z-index: 10001;
+  position: relative;
+}
