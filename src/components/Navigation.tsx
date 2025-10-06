@@ -133,7 +133,7 @@ export default function Navigation() {
               <button
                 onClick={togglePrivateMode}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
-                title={`Toggle Privacy Mode (${isPrivateMode ? 'On' : 'Off'}) - ${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Shift+P`}
+                title={`Toggle Privacy Mode (${isPrivateMode ? 'On' : 'Off'}) -'⌘'+Shift+P`}
                 aria-label={`${isPrivateMode ? 'Disable' : 'Enable'} privacy mode`}
               >
                 {isPrivateMode ? (
